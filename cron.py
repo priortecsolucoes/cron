@@ -61,7 +61,7 @@ def loadIMNDData():
                 ts_status = node.get("metas", {}).get("ts_status", None)
                 if ts_status == "APROVADO":
                     realizados_aprovados.append(node)
-                elif ts_status is null:
+                elif ts_status is None or ts_status == "":
                     pendentes.append(node)  # Adiciona à lista de pendentes
                 else:
                     realizados_nao_aprovados.append(node)
