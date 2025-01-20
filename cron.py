@@ -57,8 +57,9 @@ def loadIMNDData():
         pendentes = []  # Lista para armazenar registros com ts_status vazio
 
         for node in data["nodes"]:
-            if node["status"] == "Realizado":
-                ts_status = node.get("metas", {}).get("ts_status", None)
+            ts_status = node.get("metas", {}).get("ts_status", None)
+            
+            if node["status"] == "Realizado":                
                 if ts_status == "APROVADO":
                     realizados_aprovados.append(node)
                 else:
