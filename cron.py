@@ -3,6 +3,25 @@ from datetime import datetime
 import requests
 from collections import Counter
 
+def update_tag(tag_name, int_value):
+    """ Envia uma requisição PUT para atualizar uma tag na API """
+    url = "https://fastapi-production-1598.up.railway.app/update-tag"
+    headers = {"Content-Type": "application/json"}
+    
+    body = {
+        "tag_name": tag_name,
+        "string_value": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+        "int_value": int_value,
+        "double_value": 0
+    }
+    
+    response = requests.put(url, json=body, headers=headers)
+    
+    if response.status_code == 200:
+        print(f"✅ Tag '{tag_name}' atualizada com sucesso! Valor: {int_value}")
+    else:
+        print(f"❌ Erro ao atualizar a tag '{tag_name}'. Código: {response.status_code}, Resposta: {response.text}")
+
 def loadIMNDData():
     print(f"Iniciando tarefa às {datetime.now()}")
 
@@ -36,13 +55,17 @@ def loadIMNDData():
             print(f"{status}: {count}")
 
         # Exibir registros filtrados
-        print("\n Registros com Status 'Realizado' e ts_status 'APROVADO':")
+        print("\n📌 Registros com Status 'Realizado' e ts_status 'APROVADO':")
         for item in realizados_aprovados:
             print(item)
 
-        print("\n Registros com Status 'Realizado' e ts_status diferente de 'APROVADO':")
+        print("\n📌 Registros com Status 'Realizado' e ts_status diferente de 'APROVADO':")
         for item in realizados_nao_aprovados:
             print(item)
+
+        # Atualizar as tags na API
+        update_tag("IMND_MES_ATUAL_REALIZADOS_APROVADOS", len(realizados_aprovados))
+        update_tag("IMND_MES_ATUAL_REALIZADOS_NAO_APROVADOS", len(realizados_nao_aprovados))
 
     else:
         print(f"Erro {requisicao.status_code}")
