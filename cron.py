@@ -1,5 +1,6 @@
 import time
 from datetime import datetime, date
+import calendar
 import requests
 from collections import Counter
 
@@ -25,13 +26,16 @@ def update_tag(tag_name, int_value):
 def loadIMNDData():
     print(f"Iniciando tarefa às {datetime.now()}")
 
-    # Calculando as datas para a API (primeiro dia do mês até hoje)
+    # Calculando as datas para a API (primeiro dia do mês até o último dia do mês)
     first_day_of_month = date.today().replace(day=1)
-    today = date.today()
-
+    
+    # Obtém o último dia do mês corrente
+    last_day = calendar.monthrange(date.today().year, date.today().month)[1]
+    last_day_of_month = date.today().replace(day=last_day)
+    
     # Convertendo para o formato aceito pela API (YYYY-MM-DD)
     date_start = first_day_of_month.strftime("%Y-%m-%d")
-    date_end = today.strftime("%Y-%m-%d")
+    date_end = last_day_of_month.strftime("%Y-%m-%d")
 
     access_token = 'Basic Y29uY2VpdG86R0dHNiBjaTZzIDdCbm4gSUVQbCAzSXl6IHVYeWo='
     my_headers = {'Authorization': f'{access_token}'}
@@ -57,7 +61,7 @@ def loadIMNDData():
                 ts_status = node.get("metas", {}).get("ts_status", None)
                 if ts_status == "APROVADO":
                     realizados_aprovados.append(node)
-                elif ts_status == "":
+                elif ts_status is null:
                     pendentes.append(node)  # Adiciona à lista de pendentes
                 else:
                     realizados_nao_aprovados.append(node)
