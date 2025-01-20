@@ -50,12 +50,15 @@ def loadIMNDData():
         # Filtrar registros conforme critérios
         realizados_aprovados = []
         realizados_nao_aprovados = []
-        
+        pendentes = []  # Lista para armazenar registros com ts_status vazio
+
         for node in data["nodes"]:
             if node["status"] == "Realizado":
                 ts_status = node.get("metas", {}).get("ts_status", None)
                 if ts_status == "APROVADO":
                     realizados_aprovados.append(node)
+                elif ts_status == "":
+                    pendentes.append(node)  # Adiciona à lista de pendentes
                 else:
                     realizados_nao_aprovados.append(node)
 
@@ -73,9 +76,14 @@ def loadIMNDData():
         for item in realizados_nao_aprovados:
             print(item)
 
+        print("\n📌 Registros com Status 'Realizado' e ts_status PENDENTE:")
+        for item in pendentes:
+            print(item)
+
         # Atualizar as tags na API
         update_tag("IMND_MES_ATUAL_REALIZADOS_APROVADOS", len(realizados_aprovados))
         update_tag("IMND_MES_ATUAL_REALIZADOS_NAO_APROVADOS", len(realizados_nao_aprovados))
+        update_tag("IMND_MES_ATUAL_PENDENTES", len(pendentes))  # Nova tag para pendentes
 
     else:
         print(f"Erro {requisicao.status_code}")
