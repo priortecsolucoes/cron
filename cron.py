@@ -1,5 +1,5 @@
 import time
-from datetime import datetime
+from datetime import datetime, date
 import requests
 from collections import Counter
 
@@ -25,9 +25,19 @@ def update_tag(tag_name, int_value):
 def loadIMNDData():
     print(f"Iniciando tarefa às {datetime.now()}")
 
+    # Calculando as datas para a API (primeiro dia do mês até hoje)
+    first_day_of_month = date.today().replace(day=1)
+    today = date.today()
+
+    # Convertendo para o formato aceito pela API (YYYY-MM-DD)
+    date_start = first_day_of_month.strftime("%Y-%m-%d")
+    date_end = today.strftime("%Y-%m-%d")
+
     access_token = 'Basic Y29uY2VpdG86R0dHNiBjaTZzIDdCbm4gSUVQbCAzSXl6IHVYeWo='
     my_headers = {'Authorization': f'{access_token}'}
-    apiURL = f'https://imnd.com.br/api/automation/appointments?page=1&limit=30000&date_start=2024-10-15&date_end=2024-10-30'
+    
+    # Atualizando a URL com as datas dinâmicas
+    apiURL = f'https://imnd.com.br/api/automation/appointments?page=1&limit=30000&date_start={date_start}&date_end={date_end}'
 
     requisicao = requests.get(apiURL, headers=my_headers)
 
