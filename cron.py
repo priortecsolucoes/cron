@@ -18,10 +18,32 @@ def loadIMNDData():
         # Contagem de status
         status_counts = Counter(node["status"] for node in data["nodes"])
         
-        # Exibir os resultados
-        print("Contagem por status:")
+        # Filtrar registros conforme critérios
+        realizados_aprovados = []
+        realizados_nao_aprovados = []
+        
+        for node in data["nodes"]:
+            if node["status"] == "Realizado":
+                ts_status = node.get("metas", {}).get("ts_status", None)
+                if ts_status == "APROVADO":
+                    realizados_aprovados.append(node)
+                else:
+                    realizados_nao_aprovados.append(node)
+
+        # Exibir os resultados da contagem de status
+        print("\nContagem por status:")
         for status, count in status_counts.items():
             print(f"{status}: {count}")
+
+        # Exibir registros filtrados
+        print("\n Registros com Status 'Realizado' e ts_status 'APROVADO':")
+        for item in realizados_aprovados:
+            print(item)
+
+        print("\n Registros com Status 'Realizado' e ts_status diferente de 'APROVADO':")
+        for item in realizados_nao_aprovados:
+            print(item)
+
     else:
         print(f"Erro {requisicao.status_code}")
 
