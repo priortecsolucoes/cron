@@ -23,6 +23,22 @@ def update_tag(tag_name, int_value):
     else:
         print(f"❌ Erro ao atualizar a tag '{tag_name}'. Código: {response.status_code}, Resposta: {response.text}")
 
+def request_with_retries(url, headers, max_retries=2):
+    """ Faz uma requisição com tentativas em caso de exceção """
+    attempt = 0
+    while attempt <= max_retries:
+        try:
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()  # Levanta uma exceção para códigos de status HTTP de erro
+            return response
+        except Exception as e:
+            attempt += 1
+            print(f"⚠️ Tentativa {attempt} falhou: {e}")
+            if attempt > max_retries:
+                print("❌ Todas as tentativas falharam.")
+                raise
+            time.sleep(5)  # Aguarda 5 segundos antes de tentar novamente
+
 def loadIMNDData():
     print(f"Iniciando tarefa às {datetime.now()}")
 
@@ -49,15 +65,14 @@ def loadIMNDData():
     while has_more:
         apiURL = f'https://imnd.com.br/api/automation/appointments?page={page}&limit=1000&date_start={date_start}&date_end={date_end}'
         print(f"🔄 Requisitando página {page}...")
-        requisicao = requests.get(apiURL, headers=my_headers)
-        
-        if requisicao.status_code == 200:
+        try:
+            requisicao = request_with_retries(apiURL, my_headers)
             data = requisicao.json()
             all_nodes.extend(data.get("nodes", []))
             has_more = data.get("metadata", {}).get("pagination", {}).get("has_more", False)
             page += 1  # Incrementa para a próxima página
-        else:
-            print(f"❌ Erro {requisicao.status_code} na requisição da página {page}")
+        except Exception as e:
+            print(f"❌ Erro ao requisitar a página {page}: {e}")
             break  # Interrompe a execução em caso de erro
 
         time.sleep(10)
