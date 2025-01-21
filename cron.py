@@ -37,6 +37,9 @@ def loadIMNDData():
     date_start = first_day_of_month.strftime("%Y-%m-%d")
     date_end = last_day_of_month.strftime("%Y-%m-%d")
 
+    print(f"date_start = {date_start}")
+    print(f"date_end = {date_end}")
+    
     access_token = 'Basic Y29uY2VpdG86R0dHNiBjaTZzIDdCbm4gSUVQbCAzSXl6IHVYeWo='
     my_headers = {'Authorization': f'{access_token}'}
     
