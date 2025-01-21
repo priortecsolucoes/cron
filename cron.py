@@ -2,6 +2,7 @@ import time
 from datetime import datetime, date
 import calendar
 import requests
+import os
 from collections import Counter
 
 def update_tag(tag_name, int_value):
@@ -54,7 +55,10 @@ def loadIMNDData():
     print(f"date_start = {date_start}")
     print(f"date_end = {date_end}")
     
-    access_token = 'Basic Y29uY2VpdG86R0dHNiBjaTZzIDdCbm4gSUVQbCAzSXl6IHVYeWo='
+    access_token = os.getenv('IMND_ACCESS_TOKEN')
+    if not access_token:
+        raise EnvironmentError("A variável de ambiente 'IMND_ACCESS_TOKEN' não foi encontrada.")
+
     my_headers = {'Authorization': f'{access_token}'}
     
     # Inicializa variáveis de paginação
