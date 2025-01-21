@@ -67,7 +67,7 @@ def loadIMNDData():
     all_nodes = []
     
     while has_more:
-        apiURL = f'https://imnd.com.br/api/automation/appointments?page={page}&limit=1000&date_start={date_start}&date_end={date_end}'
+        apiURL = f'https://imnd.com.br/api/automation/appointments?page={page}&status=scheduled,fulfilled,notaccomplished&limit=1000&date_start={date_start}&date_end={date_end}'
         print(f"🔄 Requisitando página {page}...")
         try:
             requisicao = request_with_retries(apiURL, my_headers)
