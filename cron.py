@@ -93,7 +93,7 @@ def loadIMNDData():
         
         if ts_status == "APROVADO":
             aprovados.append(node)
-        else if ts_status == "" or ts_status is None:
+        elif ts_status == "" or ts_status is None:
             pendentes.append(node)
 
     # Exibir os resultados da contagem de status
@@ -104,7 +104,7 @@ def loadIMNDData():
     # Atualizar as tags na API
     #update_tag("IMND_MES_ATUAL_REALIZADOS_APROVADOS", len(realizados_aprovados))
     #update_tag("IMND_MES_ATUAL_REALIZADOS_NAO_APROVADOS", len(realizados_nao_aprovados))
-    update_tag("IMND_MES_ATUAL_APROVADOS", len(pendentes)) 
+    update_tag("IMND_MES_ATUAL_APROVADOS", len(aprovados)) 
     update_tag("IMND_MES_ATUAL_PENDENTES", len(pendentes)) 
 
     print(f"Tarefa executada às {datetime.now()}")
