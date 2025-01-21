@@ -73,23 +73,10 @@ def loadIMNDData():
         for status, count in status_counts.items():
             print(f"{status}: {count}")
 
-        # Exibir registros filtrados
-        print("\n📌 Registros com Status 'Realizado' e ts_status 'APROVADO':")
-        for item in realizados_aprovados:
-            print(item)
-
-        print("\n📌 Registros com Status 'Realizado' e ts_status diferente de 'APROVADO':")
-        for item in realizados_nao_aprovados:
-            print(item)
-
-        print("\n📌 Registros com Status 'Realizado' e ts_status PENDENTE:")
-        for item in pendentes:
-            print(item)
-
         # Atualizar as tags na API
         update_tag("IMND_MES_ATUAL_REALIZADOS_APROVADOS", len(realizados_aprovados))
         update_tag("IMND_MES_ATUAL_REALIZADOS_NAO_APROVADOS", len(realizados_nao_aprovados))
-        update_tag("IMND_MES_ATUAL_PENDENTES", len(pendentes))  # Nova tag para pendentes
+        update_tag("IMND_MES_ATUAL_PENDENTES", len(pendentes)) 
 
     else:
         print(f"Erro {requisicao.status_code}")
