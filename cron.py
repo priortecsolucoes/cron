@@ -47,7 +47,7 @@ def loadIMNDData():
     all_nodes = []
     
     while has_more:
-        apiURL = f'https://imnd.com.br/api/automation/appointments?page={page}&limit=1000&date_start={date_start}&date_end={date_end}'
+        apiURL = f'https://imnd.com.br/api/automation/appointments?page={page}&limit=500&date_start={date_start}&date_end={date_end}'
         print(f"🔄 Requisitando página {page}...")
         requisicao = requests.get(apiURL, headers=my_headers)
         
@@ -59,6 +59,8 @@ def loadIMNDData():
         else:
             print(f"❌ Erro {requisicao.status_code} na requisição da página {page}")
             break  # Interrompe a execução em caso de erro
+
+        time.sleep(2)
     
     # Contagem de status
     status_counts = Counter(node["status"] for node in all_nodes)
