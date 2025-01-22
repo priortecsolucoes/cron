@@ -86,6 +86,8 @@ def loadIMNDData():
     
     # Filtrar registros conforme critérios
     aprovados = []
+    inelegiveis = []
+    negados = []
     pendentes = []
 
     for node in all_nodes:
@@ -93,6 +95,10 @@ def loadIMNDData():
         
         if ts_status == "APROVADO":
             aprovados.append(node)
+        elif ts_status == "INELEGÍVEL":
+            inelegiveis.append(node)
+        elif ts_status == "NEGADO":
+            negados.append(node)
         elif ts_status == "" or ts_status is None:
             pendentes.append(node)
 
@@ -106,6 +112,8 @@ def loadIMNDData():
     #update_tag("IMND_MES_ATUAL_REALIZADOS_NAO_APROVADOS", len(realizados_nao_aprovados))
     update_tag("IMND_MES_ATUAL_APROVADOS", len(aprovados)) 
     update_tag("IMND_MES_ATUAL_PENDENTES", len(pendentes)) 
+    update_tag("IMND_MES_ATUAL_INELEGIVEIS", len(pendentes))
+    update_tag("IMND_MES_ATUAL_NEGADOS", len(pendentes))
 
     print(f"Tarefa executada às {datetime.now()}")
 
