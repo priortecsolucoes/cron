@@ -79,7 +79,7 @@ def loadIMNDData():
             print(f"❌ Erro ao requisitar a página {page}: {e}")
             break  # Interrompe a execução em caso de erro
 
-        time.sleep(10)
+        time.sleep(5)
     
     # Contagem de status
     status_counts = Counter(node["status"] for node in all_nodes)
