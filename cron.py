@@ -112,8 +112,8 @@ def loadIMNDData():
     #update_tag("IMND_MES_ATUAL_REALIZADOS_NAO_APROVADOS", len(realizados_nao_aprovados))
     update_tag("IMND_MES_ATUAL_APROVADOS", len(aprovados)) 
     update_tag("IMND_MES_ATUAL_PENDENTES", len(pendentes)) 
-    update_tag("IMND_MES_ATUAL_INELEGIVEIS", len(pendentes))
-    update_tag("IMND_MES_ATUAL_NEGADOS", len(pendentes))
+    update_tag("IMND_MES_ATUAL_INELEGIVEIS", len(inelegiveis))
+    update_tag("IMND_MES_ATUAL_NEGADOS", len(negados))
 
     print(f"Tarefa executada às {datetime.now()}")
 
