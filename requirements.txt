@@ -1,5 +1,2 @@
 psycopg2
 requests
-os
-dotenv
-pytz
