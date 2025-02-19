@@ -219,7 +219,7 @@ class IMNDDataLoader:
                     })
             except ValueError as erro:
                 print(f"❌ Erro ao converter data '{node.get('data', 'Desconhecida')}': {erro}")
-
+        print('Consultas Faturaveis nao autorizadas', self.billableNotAuthorized)
         return self.billableNotAuthorized
 
     def processBillableQueries(self, nodes):
@@ -238,6 +238,7 @@ class IMNDDataLoader:
                     })
             except ValueError as erro:
                 print(f"❌ Erro ao converter data '{node.get('data', 'Desconhecida')}': {erro}")
+         print('Consultas Faturaveis Pendentes mes atual', self.authorizedBillable)
         return self.authorizedBillable
     def setLastRunTime(self):
         timeZone = pytz.timezone('America/Sao_Paulo') #Definindo o fuso horario de brasilia, nao esta errado, realmente se orienta por SP
