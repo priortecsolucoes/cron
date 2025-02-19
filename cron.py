@@ -4,118 +4,251 @@ import calendar
 import requests
 import os
 from collections import Counter
-
-def update_tag(tag_name, int_value):
-    """ Envia uma requisição PUT para atualizar uma tag na API """
-    url = "https://fastapi-production-1598.up.railway.app/update-tag"
-    headers = {"Content-Type": "application/json"}
-    
-    body = {
-        "tag_name": tag_name,
-        "string_value": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
-        "int_value": int_value,
-        "double_value": 0
-    }
-    
-    response = requests.put(url, json=body, headers=headers)
-    
-    if response.status_code == 200:
-        print(f"✅ Tag '{tag_name}' atualizada com sucesso! Valor: {int_value}")
-    else:
-        print(f"❌ Erro ao atualizar a tag '{tag_name}'. Código: {response.status_code}, Resposta: {response.text}")
-
-def request_with_retries(url, headers, max_retries=2):
-    """ Faz uma requisição com tentativas em caso de exceção """
-    attempt = 0
-    while attempt <= max_retries:
+from datetime import datetime, date, timedelta
+from dotenv import load_dotenv
+import pytz
+class IMNDDataLoader:
+    def __init__(self):
+        load_dotenv()
+        self.accessToken = os.getenv('IMND_ACCESS_TOKEN')
+        if not self.accessToken:
+            raise EnvironmentError("A variável de ambiente 'IMND_ACCESS_TOKEN' não foi encontrada.")
+        self.headers = {'Authorization': f'Bearer {self.accessToken}'}
+        self.motivations = {
+            "atendimento recorrente",
+            "atendimento sos",
+            "atendimento pontual", 
+            "alta",
+            "emergência do cliente",
+            "atendimento interrompido pelo cliente"
+        }
+        self.filteredNodes = []
+        self.authorizedBillable = []
+        self.billableNotAuthorized = []
+        self.pendingAuthorizationInArrearsCurrentMonth = []
+    def updateTag(self, tagName, intValue): #Envia uma requisicao PUT para atualizar uma tag na API 
         try:
-            response = requests.get(url, headers=headers)
-            response.raise_for_status()  # Levanta uma exceção para códigos de status HTTP de erro
-            return response
+            url = "https://fastapi-production-1598.up.railway.app/update-tag"
+            headers = {"Content-Type": "application/json"}
+            body = {
+                "tag_name": tagName,
+                "string_value": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+                "int_value": intValue,
+                "double_value": 0
+            }
+            response = requests.put(url, json=body, headers=headers)
+
+            if response.status_code == 200:
+                print(f"✅ Tag '{tagName}' atualizada com sucesso! Valor: {intValue}")
+            else:
+                print(f"❌ Erro ao atualizar a tag '{tagName}'. Código: {response.status_code}, Resposta: {response.text}")
+        except requests.RequestException as e:
+            print(f"❌ Erro na requisição para atualizar a tag '{tagName}': {e}")
         except Exception as e:
+            print(f"❌ Erro inesperado ao atualizar a tag '{tagName}': {e}")
+    def updateTagHistoryValue(self, tagName, intValue): #Envia uma requisicao PUT para atualizar uma tag na API 
+        try:
+            url = "https://fastapi-production-1598.up.railway.app/update-tag"
+            headers = {"Content-Type": "application/json"}
+            body = {
+                "tag_name": tagName,
+                "string_value": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+                "int_value": 0,
+                "double_value": 0
+            }
+            response = requests.put(url, json=body, headers=headers)
+
+            if response.status_code == 200:
+                print(f"✅ Tag '{tagName}' atualizada com sucesso! Valor: {intValue}")
+            else:
+                print(f"❌ Erro ao atualizar a tag '{tagName}'. Código: {response.status_code}, Resposta: {response.text}")
+        except requests.RequestException as e:
+            print(f"❌ Erro na requisição para atualizar a tag '{tagName}': {e}")
+        except Exception as e:
+            print(f"❌ Erro inesperado ao atualizar a tag '{tagName}': {e}")
+    def requestWithRetries(self, url, maxRetries=2):#Faz uma requisicao com tentativas em caso de excecao
+        attempt = 0
+        while attempt <= maxRetries:
+            try:
+                response = requests.get(url, headers=self.headers)
+                response.raise_for_status()  # Levanta exceção para erros HTTP
+                return response
+            except requests.HTTPError as e:
+                print(f"⚠️ Erro HTTP na tentativa {attempt + 1}: {e.response.status_code} - {e.response.text}")
+            except requests.RequestException as e:
+                print(f"⚠️ Erro na requisição na tentativa {attempt + 1}: {e}")
+            except Exception as e:
+                print(f"⚠️ Erro inesperado na tentativa {attempt + 1}: {e}")
             attempt += 1
-            print(f"⚠️ Tentativa {attempt} falhou: {e}")
-            if attempt > max_retries:
-                print("❌ Todas as tentativas falharam.")
-                raise
+            if attempt > maxRetries:
+                print("❌ Todas as tentativas falharam. Verifique sua conexão ou os detalhes da API.")
+                return None
             time.sleep(5)  # Aguarda 5 segundos antes de tentar novamente
-
-def loadIMNDData():
-    print(f"Iniciando tarefa às {datetime.now()}")
-
-    # Calculando as datas para a API (primeiro dia do mês até o último dia do mês)
-    first_day_of_month = date.today().replace(day=1)
-    last_day = calendar.monthrange(date.today().year, date.today().month)[1]
-    last_day_of_month = date.today().replace(day=last_day)
-    
-    # Convertendo para o formato aceito pela API (YYYY-MM-DD)
-    date_start = first_day_of_month.strftime("%Y-%m-%d")
-    date_end = last_day_of_month.strftime("%Y-%m-%d")
-    
-    print(f"date_start = {date_start}")
-    print(f"date_end = {date_end}")
-    
-    access_token = os.getenv('IMND_ACCESS_TOKEN')
-    if not access_token:
-        raise EnvironmentError("A variável de ambiente 'IMND_ACCESS_TOKEN' não foi encontrada.")
-
-    my_headers = {'Authorization': f'{access_token}'}
-    
-    # Inicializa variáveis de paginação
-    page = 1
-    has_more = True
-    all_nodes = []
-    
-    while has_more:
-        apiURL = f'https://imnd.com.br/api/automation/appointments?page={page}&status=scheduled,fulfilled,notaccomplished&limit=1000&date_start={date_start}&date_end={date_end}'
-        print(f"🔄 Requisitando página {page}...")
+    def loadData(self):
+        print(f"Iniciando tarefa às {datetime.now()}")
         try:
-            requisicao = request_with_retries(apiURL, my_headers)
-            data = requisicao.json()
-            all_nodes.extend(data.get("nodes", []))
-            has_more = data.get("metadata", {}).get("pagination", {}).get("has_more", False)
-            page += 1  # Incrementa para a próxima página
+            # Calculando as datas para a API
+            firstDayOfMonth = date.today().replace(day=1)
+            lastDay = calendar.monthrange(date.today().year, date.today().month)[1]
+            lastDayOfMonth = date.today().replace(day=lastDay)
+
+            # Convertendo para o formato aceito pela API
+            dateStart = firstDayOfMonth.strftime("%Y-%m-%d")
+            dateEnd = lastDayOfMonth.strftime("%Y-%m-%d")
+
+            print(f"dateStart = {dateStart}")
+            print(f"dateEnd = {dateEnd}")
+
+            # Inicializando variáveis de paginação
+            page = 1
+            hasMore = True
+            allNodes = []
+
+            while hasMore:
+                apiUrl = f'https://imnd.com.br/api/automation/appointments?page={page}&status=scheduled,fulfilled,notaccomplished&limit=1000&date_start={dateStart}&date_end={dateEnd}'
+                print(f"🔄 Requisitando página {page}...")
+
+                requisicao = self.requestWithRetries(apiUrl)
+                if requisicao is None:
+                    print("❌ Não foi possível obter dados da API após várias tentativas. Finalizando tarefa.")
+                    break
+                try:
+                    data = requisicao.json()
+                    allNodes.extend(data.get("nodes", []))
+                    hasMore = data.get("metadata", {}).get("pagination", {}).get("has_more", False)
+                    page += 1  # Incrementa para a próxima página
+                except ValueError as e:
+                    print(f"❌ Erro ao decodificar JSON na página {page}: {e}")
+                    break  # Interrompe a execução em caso de erro de decodificação
+                except Exception as e:
+                    print(f"❌ Erro inesperado ao processar a página {page}: {e}")
+                    break
+                time.sleep(5)
+
+            try:  # Contagem de status
+                statusCounts = Counter(node["status"] for node in allNodes)
+
+                # Filtrar registros conforme critérios
+                aprovados = []
+                inelegiveis = []
+                negados = []
+                pendentes = []
+                for node in allNodes:
+                    tsStatus = node.get("metas", {}).get("ts_status", None)
+
+                    if tsStatus == "APROVADO":
+                        aprovados.append(node)
+                    elif tsStatus == "INELEGÍVEL":
+                        inelegiveis.append(node)
+                    elif tsStatus == "NEGADO":
+                        negados.append(node)
+                    elif tsStatus == "" or tsStatus is None:
+                        pendentes.append(node)
+
+                print("\nContagem por status:")
+                for status, count in statusCounts.items():
+                    print(f"{status}: {count}")
+            except KeyError as e:
+                print(f"❌ Erro ao acessar dados dos nós: {e}")
+            except Exception as e:
+                print(f"❌ Erro inesperado ao processar os dados: {e}")
+
+            try:  # Chamar as novas funções
+                naoAutorizados = self.processNotBillableQueries(allNodes)
+                processados = self.processBillableQueries(allNodes)
+                pendentesAtrasadosMesAtual = self.checkPendingAuthorizationForCurrentMonth(allNodes)
+                lastUpdate = self.setLastRunTime()
+                self.updateTagHistoryValue("IMND_DATA_DA_ULTIMA_EXECUCAO", len(lastUpdate))
+                # Atualizar as tags na API
+                self.updateTag("IMND_MES_ATUAL_APROVADOS", len(aprovados))
+                self.updateTag("IMND_MES_ATUAL_PENDENTES", len(pendentes))
+                self.updateTag("IMND_MES_ATUAL_INELEGIVEIS", len(inelegiveis))
+                self.updateTag("IMND_MES_ATUAL_NEGADOS", len(negados))
+
+                # Atualizar com novos dados processados
+                self.updateTag("IMND_MES_ATUAL_FATURAVEIS_NAO_AUTORIZADAS", len(naoAutorizados))
+                self.updateTag("IMND_MES_ATUAL_FATURAVEIS_AUTORIZADAS", len(processados))
+                self.updateTag("IMND_AUTORIZACAO_PENDENTES_ATRASADOS_MES_ATUAL", len(pendentesAtrasadosMesAtual))
+            except Exception as e:
+                print(f"❌ Erro ao atualizar tags ou processar dados: {e}")
         except Exception as e:
-            print(f"❌ Erro ao requisitar a página {page}: {e}")
-            break  # Interrompe a execução em caso de erro
+            print(f"❌ Erro geral na execução da tarefa: {e}")
+        print(f"Tarefa executada às {datetime.now()}")
+    def checkPendingAuthorizationForCurrentMonth(self, nodes):
+        today = date.today()
+        limitDate = today - timedelta(days=3)  # Data limite: até 3 dias antes de hoje
+        for node in nodes:
+            try:
+                nodeDateTimeStr = node.get("data", "01/01/1970")
+                nodeDateTime = datetime.strptime(nodeDateTimeStr, "%d/%m/%Y").date()
+                nodeMotivation = (node.get("motivacao") or "").lower().strip()
+                nodeStatus = node.get("metas", {}).get("ts_status")
 
-        time.sleep(5)
-    
-    # Contagem de status
-    status_counts = Counter(node["status"] for node in all_nodes)
-    
-    # Filtrar registros conforme critérios
-    aprovados = []
-    inelegiveis = []
-    negados = []
-    pendentes = []
+                # Verifica se a data está entre até 3 dias antes da data atual ou datas futuras
+                if (limitDate <= nodeDateTime or nodeDateTime > today) and \
+                nodeMotivation in self.motivations and \
+                (nodeStatus is None or nodeStatus == ""):
 
-    for node in all_nodes:
-        ts_status = node.get("metas", {}).get("ts_status", None)
+                    print(f"Consulta faturável não autorizada encontrada em {node['data']}")
+                    self.pendingAuthorizationInArrearsCurrentMonth.append({
+                        "data": node["data"],
+                        "motivacao": node["motivacao"],
+                        "ts_status": node.get("metas", {}).get("ts_status", ""),
+                    })
+            except ValueError as erro:
+                print(f"❌ Erro ao converter data '{node.get('data', 'Desconhecida')}': {erro}")
+        return self.pendingAuthorizationInArrearsCurrentMonth
+
         
-        if ts_status == "APROVADO":
-            aprovados.append(node)
-        elif ts_status == "INELEGÍVEL":
-            inelegiveis.append(node)
-        elif ts_status == "NEGADO":
-            negados.append(node)
-        elif ts_status == "" or ts_status is None:
-            pendentes.append(node)
+    def processNotBillableQueries(self, nodes):
+        today = date.today()
+        limitDate = today - timedelta(days=3)  # Data limite: 3 dias antes de hoje
+        startOfMonth = today.replace(day=1)    # Início do mês atual
 
-    # Exibir os resultados da contagem de status
-    print("\nContagem por status:")
-    for status, count in status_counts.items():
-        print(f"{status}: {count}")
+        for node in nodes:  # Filtra os dados e cria o filteredNodes com a estrutura desejada
+            try:
+                nodeDateTimeStr = node.get("data", "01/01/1970")
+                nodeDateTime = datetime.strptime(nodeDateTimeStr, "%d/%m/%Y").date()
+                nodeMotivation = (node.get("motivacao") or "").lower().strip()
+                nodeStatus = node.get("metas", {}).get("ts_status")
 
-    # Atualizar as tags na API
-    #update_tag("IMND_MES_ATUAL_REALIZADOS_APROVADOS", len(realizados_aprovados))
-    #update_tag("IMND_MES_ATUAL_REALIZADOS_NAO_APROVADOS", len(realizados_nao_aprovados))
-    update_tag("IMND_MES_ATUAL_APROVADOS", len(aprovados)) 
-    update_tag("IMND_MES_ATUAL_PENDENTES", len(pendentes)) 
-    update_tag("IMND_MES_ATUAL_INELEGIVEIS", len(inelegiveis))
-    update_tag("IMND_MES_ATUAL_NEGADOS", len(negados))
+                if startOfMonth <= nodeDateTime < limitDate and nodeMotivation in self.motivations and (nodeStatus is None or nodeStatus == ""):# Verifica se a data está entre o início do mês e registros de mais de 3 dias atrás
+                    print(f"Consulta faturável não autorizada encontrada em {node['data']}")
+                    self.billableNotAuthorized.append({
+                        "data": node["data"],
+                        "motivacao": node["motivacao"],
+                        "ts_status": node.get("metas", {}).get("ts_status", ""),
+                    })
+            except ValueError as erro:
+                print(f"❌ Erro ao converter data '{node.get('data', 'Desconhecida')}': {erro}")
 
-    print(f"Tarefa executada às {datetime.now()}")
+        return self.billableNotAuthorized
 
+    def processBillableQueries(self, nodes):
+        today = date.today()
+        limitDate = today - timedelta(days=3)  # Data limite é 3 dias antes de hoje
+        for node in nodes:# Filtra os dados e cria o filteredNodes com a estrutura desejada
+            try:
+                nodeDateTimeStr = node.get("data", "01/01/1970")
+                nodeDateTime = datetime.strptime(nodeDateTimeStr, "%d/%m/%Y").date()
+                nodeMotivation = (node.get("motivacao") or "").lower().strip()
+                nodeStatus = (node.get("metas", {}).get("ts_status") or "").lower().strip()
+                if nodeDateTime <= limitDate and nodeMotivation in self.motivations and nodeStatus == "aprovado": # Agora o filtro verifica se o status é 'aprovado'
+                    self.authorizedBillable.append({
+                        "data": node["data"],
+                        "motivacao": node["motivacao"]
+                    })
+            except ValueError as erro:
+                print(f"❌ Erro ao converter data '{node.get('data', 'Desconhecida')}': {erro}")
+        return self.authorizedBillable
+    def setLastRunTime(self):
+        timeZone = pytz.timezone('America/Sao_Paulo') #Definindo o fuso horario de brasilia, nao esta errado, realmente se orienta por SP
+        dateTimeBrasilia = datetime.now(timeZone)
+        updatedDateandTime =dateTimeBrasilia.strftime('%d/%m/%Y %H:%M:%S')
+        return updatedDateandTime
 if __name__ == "__main__":
-    loadIMNDData()
+    try:
+        loader = IMNDDataLoader()
+        loader.loadData()
+    except Exception as e:
+        print(f"❌ Erro fatal: {e}")
