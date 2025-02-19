@@ -5,11 +5,9 @@ import requests
 import os
 from collections import Counter
 from datetime import datetime, date, timedelta
-from dotenv import load_dotenv
 import pytz
 class IMNDDataLoader:
     def __init__(self):
-        load_dotenv()
         self.accessToken = os.getenv('IMND_ACCESS_TOKEN')
         if not self.accessToken:
             raise EnvironmentError("A variável de ambiente 'IMND_ACCESS_TOKEN' não foi encontrada.")
