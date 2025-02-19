@@ -11,7 +11,7 @@ class IMNDDataLoader:
         self.accessToken = os.getenv('IMND_ACCESS_TOKEN')
         if not self.accessToken:
             raise EnvironmentError("A variável de ambiente 'IMND_ACCESS_TOKEN' não foi encontrada.")
-        self.headers = {'Authorization': f'Bearer {self.accessToken}'}
+        self.headers = {'Authorization': f'{self.accessToken}'}
         self.motivations = {
             "atendimento recorrente",
             "atendimento sos",
