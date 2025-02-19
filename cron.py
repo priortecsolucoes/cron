@@ -68,6 +68,8 @@ class IMNDDataLoader:
         attempt = 0
         while attempt <= maxRetries:
             try:
+                print(url)
+                print(self.headers)
                 response = requests.get(url, headers=self.headers)
                 response.raise_for_status()  # Levanta exceção para erros HTTP
                 return response
