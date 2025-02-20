@@ -242,11 +242,12 @@ class IMNDDataLoader:
                 print(f"❌ Erro ao converter data '{node.get('data', 'Desconhecida')}': {erro}")
         print('Consultas Faturaveis Pendentes mes atual', self.authorizedBillable)
         return self.authorizedBillable
-    def setLastRunTime(self):
-        timeZone = pytz.timezone('America/Sao_Paulo') #Definindo o fuso horario de brasilia, nao esta errado, realmente se orienta por SP
-        dateTimeBrasilia = datetime.now(timeZone)
-        updatedDateandTime =dateTimeBrasilia.strftime('%d/%m/%Y %H:%M:%S')
-        return updatedDateandTime
+   def setLastRunTime(self):
+    timeZone = pytz.timezone('America/Sao_Paulo') 
+    utcNow = datetime.utcnow()  # Obtém o tempo UTC
+    dateTimeBrasilia = utcNow.replace(tzinfo=pytz.utc).astimezone(timeZone)  # Converte para SP
+    updatedDateandTime = dateTimeBrasilia.strftime('%d/%m/%Y %H:%M:%S')
+    return updatedDateandTime
 if __name__ == "__main__":
     try:
         loader = IMNDDataLoader()
