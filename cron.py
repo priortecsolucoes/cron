@@ -243,9 +243,9 @@ class IMNDDataLoader:
         print('Consultas Faturaveis Pendentes mes atual', self.authorizedBillable)
         return self.authorizedBillable
     def setLastRunTime(self):
-        timeZone = pytz.timezone('America/Sao_Paulo') 
-        utcNow = datetime.utcnow()  # Obtém o tempo UTC
-        dateTimeBrasilia = utcNow.replace(tzinfo=pytz.utc).astimezone(timeZone)  # Converte para SP
+        timeZone = pytz.timezone('America/Sao_Paulo')  
+        utcNow = datetime.utcnow()  # Obtém o horário UTC
+        dateTimeBrasilia = pytz.utc.localize(utcNow).astimezone(timeZone)  # Converte para SP
         updatedDateandTime = dateTimeBrasilia.strftime('%d/%m/%Y %H:%M:%S')
         return updatedDateandTime
 if __name__ == "__main__":
