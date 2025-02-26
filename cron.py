@@ -26,11 +26,12 @@ class IMNDDataLoader:
         self.pendingAuthorizationInArrearsCurrentMonth = []
     def updateTag(self, tagName, intValue): #Envia uma requisicao PUT para atualizar uma tag na API 
         try:
+            horario = self.setLastRunTime()
             url = "https://fastapi-production-1598.up.railway.app/update-tag"
             headers = {"Content-Type": "application/json"}
             body = {
                 "tag_name": tagName,
-                "string_value": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+                "string_value": horario,
                 "int_value": intValue,
                 "double_value": 0
             }
@@ -46,11 +47,12 @@ class IMNDDataLoader:
             print(f"❌ Erro inesperado ao atualizar a tag '{tagName}': {e}")
     def updateTagHistoryValue(self, tagName, intValue): #Envia uma requisicao PUT para atualizar uma tag na API 
         try:
+            horario = self.setLastRunTime()
             url = "https://fastapi-production-1598.up.railway.app/update-tag"
             headers = {"Content-Type": "application/json"}
             body = {
                 "tag_name": tagName,
-                "string_value": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+                "string_value": horario,
                 "int_value": 0,
                 "double_value": 0
             }
