@@ -11,7 +11,6 @@ class IMNDDataLoader:
         self.accessToken = os.getenv('IMND_ACCESS_TOKEN')
         if not self.accessToken:
             raise EnvironmentError("A variável de ambiente 'IMND_ACCESS_TOKEN' não foi encontrada.")
-        self.headers = {'Authorization': f'{self.accessToken}'}
         self.motivations = {
             "atendimento recorrente",
             "atendimento sos",
@@ -71,8 +70,7 @@ class IMNDDataLoader:
         while attempt <= maxRetries:
             try:
                 print(url)
-                print(self.headers)
-                response = requests.get(url, headers=self.headers)
+                response = requests.get(url)
                 response.raise_for_status()  # Levanta exceção para erros HTTP
                 return response
             except requests.HTTPError as e:
@@ -107,7 +105,7 @@ class IMNDDataLoader:
             allNodes = []
 
             while hasMore:
-                apiUrl = f'https://imnd.com.br/api/automation/appointments?page={page}&status=scheduled,fulfilled,notaccomplished&limit=1000&date_start={dateStart}&date_end={dateEnd}'
+                apiUrl = f'http://imnd.ddns.net:3000/api/automation/appointments?authorization={self.accessToken}&page={page}&status=inprogress,fulfilled,scheduled,scheduled,rescheduled_24,notaccomplished_24&limit=1000&date_start={dateStart}&date_end={dateEnd}'
                 print(f"🔄 Requisitando página {page}...")
 
                 requisicao = self.requestWithRetries(apiUrl)
