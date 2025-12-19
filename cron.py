@@ -97,10 +97,6 @@ class IMNDDataLoader:
             # Convertendo para o formato aceito pela API
             dateStart = firstDayOfMonth.strftime("%Y-%m-%d")
             dateEnd = lastDayOfMonth.strftime("%Y-%m-%d")
-
-            print(f"dateStart = {dateStart}")
-            print(f"dateEnd = {dateEnd}")
-
             # Inicializando variáveis de paginação
             page = 1
             hasMore = True
@@ -135,9 +131,16 @@ class IMNDDataLoader:
                 inelegiveis = []
                 negados = []
                 pendentes = []
+                today_and_tomorrow_pending = []
+                today = date.today()
+                
+                tomorrow = today + timedelta(days=1)
+                todayStr = today.strftime("%d/%m/%Y")
+                tomorrowStr = tomorrow.strftime("%d/%m/%Y")
+
                 for node in allNodes:
                     tsStatus = node.get("metas", {}).get("ts_status", None)
-
+                    nodeData = node.get("data")
                     if tsStatus == "APROVADO":
                         aprovados.append(node)
                     elif tsStatus == "INELEGÍVEL":
@@ -145,6 +148,9 @@ class IMNDDataLoader:
                     elif tsStatus == "NEGADO":
                         negados.append(node)
                     elif tsStatus == "" or tsStatus is None:
+                        if nodeData == todayStr or nodeData == tomorrowStr:
+                            today_and_tomorrow_pending.append(node)
+                            continue
                         pendentes.append(node)
 
                 print("\nContagem por status:")
@@ -157,19 +163,24 @@ class IMNDDataLoader:
 
             try:  # Chamar as novas funções
                 naoAutorizados = self.processNotBillableQueries(allNodes)
-                processados = self.processBillableQueries(allNodes)
+                processadosAutorizados = self.processBillableQueries(allNodes, "aprovado")
+                processadosInelegiveis = self.processBillableQueries(allNodes, "inelegível")
+                processadosNegados = self.processBillableQueries(allNodes, "negado")
                 pendentesAtrasadosMesAtual = self.checkPendingAuthorizationForCurrentMonth(allNodes)
                 lastUpdate = self.setLastRunTime()
                 self.updateTagHistoryValue("IMND_DATA_DA_ULTIMA_EXECUCAO", len(lastUpdate))
                 # Atualizar as tags na API
                 self.updateTag("IMND_MES_ATUAL_APROVADOS", len(aprovados))
                 self.updateTag("IMND_MES_ATUAL_PENDENTES", len(pendentes))
+                self.updateTag("IMND_MES_ATUAL_PENDENCIAS_IMEDIATAS", len(today_and_tomorrow_pending))
                 self.updateTag("IMND_MES_ATUAL_INELEGIVEIS", len(inelegiveis))
                 self.updateTag("IMND_MES_ATUAL_NEGADOS", len(negados))
 
                 # Atualizar com novos dados processados
                 self.updateTag("IMND_MES_ATUAL_FATURAVEIS_NAO_AUTORIZADAS", len(naoAutorizados))
-                self.updateTag("IMND_MES_ATUAL_FATURAVEIS_AUTORIZADAS", len(processados))
+                self.updateTag("IMND_MES_ATUAL_FATURAVEIS_AUTORIZADAS", len(processadosAutorizados))
+                self.updateTag("IMND_MES_ATUAL_FATURAVEIS_INELEGIVEIS", len(processadosInelegiveis))
+                self.updateTag("IMND_MES_ATUAL_FATURAVEIS_NEGADOS", len(processadosNegados))
                 self.updateTag("IMND_AUTORIZACAO_PENDENTES_ATRASADOS_MES_ATUAL", len(pendentesAtrasadosMesAtual))
             except Exception as e:
                 print(f"❌ Erro ao atualizar tags ou processar dados: {e}")
@@ -183,25 +194,18 @@ class IMNDDataLoader:
             try:
                 nodeDateTimeStr = node.get("data", "01/01/1970")
                 nodeDateTime = datetime.strptime(nodeDateTimeStr, "%d/%m/%Y").date()
-                nodeMotivation = (node.get("motivacao") or "").lower().strip()
                 nodeStatus = node.get("metas", {}).get("ts_status")
 
                 # Verifica se a data está entre até 3 dias antes da data atual ou datas futuras
-                if (limitDate <= nodeDateTime or nodeDateTime > today) and \
-                nodeMotivation in self.motivations and \
-                (nodeStatus is None or nodeStatus == ""):
-
+                if (limitDate <= nodeDateTime or nodeDateTime > today) and (nodeStatus is None or nodeStatus == ""):
                     print(f"Consulta faturável não autorizada encontrada em {node['data']}")
                     self.pendingAuthorizationInArrearsCurrentMonth.append({
                         "data": node["data"],
-                        "motivacao": node["motivacao"],
                         "ts_status": node.get("metas", {}).get("ts_status", ""),
                     })
             except ValueError as erro:
                 print(f"❌ Erro ao converter data '{node.get('data', 'Desconhecida')}': {erro}")
         return self.pendingAuthorizationInArrearsCurrentMonth
-
-        
     def processNotBillableQueries(self, nodes):
         today = date.today()
         limitDate = today - timedelta(days=3)  # Data limite: 3 dias antes de hoje
@@ -226,24 +230,25 @@ class IMNDDataLoader:
         print('Consultas Faturaveis nao autorizadas', self.billableNotAuthorized)
         return self.billableNotAuthorized
 
-    def processBillableQueries(self, nodes):
+    def processBillableQueries(self, nodes, status):
         today = date.today()
-        limitDate = today - timedelta(days=3)  # Data limite é 3 dias antes de hoje
-        for node in nodes:# Filtra os dados e cria o filteredNodes com a estrutura desejada
+        limitDate = today - timedelta(days=3)
+        result = []  
+        for node in nodes:
             try:
                 nodeDateTimeStr = node.get("data", "01/01/1970")
                 nodeDateTime = datetime.strptime(nodeDateTimeStr, "%d/%m/%Y").date()
                 nodeMotivation = (node.get("motivacao") or "").lower().strip()
                 nodeStatus = (node.get("metas", {}).get("ts_status") or "").lower().strip()
-                if nodeDateTime <= limitDate and nodeMotivation in self.motivations and nodeStatus == "aprovado": # Agora o filtro verifica se o status é 'aprovado'
-                    self.authorizedBillable.append({
+
+                if (nodeDateTime <= limitDate and nodeMotivation in self.motivations and nodeStatus == status):
+                    result.append({
                         "data": node["data"],
                         "motivacao": node["motivacao"]
                     })
             except ValueError as erro:
                 print(f"❌ Erro ao converter data '{node.get('data', 'Desconhecida')}': {erro}")
-        print('Consultas Faturaveis Pendentes mes atual', self.authorizedBillable)
-        return self.authorizedBillable
+        return result
     def setLastRunTime(self):
         timeZone = pytz.timezone('America/Sao_Paulo') #Definindo o fuso horario de brasilia, nao esta errado, realmente se orienta por SP
         dateTimeBrasilia = datetime.now(timeZone)
