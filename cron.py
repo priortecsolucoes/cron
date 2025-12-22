@@ -169,6 +169,7 @@ class IMNDDataLoader:
                 pendentesAtrasadosMesAtual = self.checkPendingAuthorizationForCurrentMonth(allNodes)
                 lastUpdate = self.setLastRunTime()
                 self.updateTagHistoryValue("IMND_DATA_DA_ULTIMA_EXECUCAO", len(lastUpdate))
+                
                 # Atualizar as tags na API
                 self.updateTag("IMND_MES_ATUAL_APROVADOS", len(aprovados))
                 self.updateTag("IMND_MES_ATUAL_PENDENTES", len(pendentes))
