@@ -198,7 +198,7 @@ class IMNDDataLoader:
                 nodeStatus = node.get("metas", {}).get("ts_status")
 
                 # Verifica se a data está entre até 3 dias antes da data atual ou datas futuras
-                if (limitDate <= nodeDateTime or nodeDateTime > today) and (nodeStatus is None or nodeStatus == ""):
+                if (limitDate <= nodeDateTime) and (nodeStatus is None or nodeStatus == ""):
                     print(f"Consulta faturável não autorizada encontrada em {node['data']}")
                     self.pendingAuthorizationInArrearsCurrentMonth.append({
                         "data": node["data"],
