@@ -131,7 +131,7 @@ class IMNDDataLoader:
                 inelegiveis = []
                 negados = []
                 pendentes = []
-                today_and_tomorrow_pending = []
+                tomorrow_pending = []
                 today = date.today()
                 
                 tomorrow = today + timedelta(days=1)
@@ -148,10 +148,10 @@ class IMNDDataLoader:
                     elif tsStatus == "NEGADO":
                         negados.append(node)
                     elif tsStatus == "" or tsStatus is None:
-                        if nodeData == todayStr or nodeData == tomorrowStr:
-                            today_and_tomorrow_pending.append(node)
-                            continue
-                        pendentes.append(node)
+                        if nodeData == tomorrowStr:
+                            tomorrow_pending.append(node)
+                        elif nodeData == todayStr:
+                            pendentes.append(node)
 
                 print("\nContagem por status:")
                 for status, count in statusCounts.items():
@@ -173,7 +173,7 @@ class IMNDDataLoader:
                 # Atualizar as tags na API
                 self.updateTag("IMND_MES_ATUAL_APROVADOS", len(aprovados))
                 self.updateTag("IMND_MES_ATUAL_PENDENTES", len(pendentes))
-                self.updateTag("IMND_MES_ATUAL_PENDENCIAS_IMEDIATAS", len(today_and_tomorrow_pending))
+                self.updateTag("IMND_MES_ATUAL_PENDENCIAS_IMEDIATAS", len(tomorrow_pending))
                 self.updateTag("IMND_MES_ATUAL_INELEGIVEIS", len(inelegiveis))
                 self.updateTag("IMND_MES_ATUAL_NEGADOS", len(negados))
 
