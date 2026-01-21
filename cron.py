@@ -18,7 +18,8 @@ class IMNDDataLoader:
             "atendimento pontual", 
             "alta",
             "emergência do cliente",
-            "atendimento interrompido pelo cliente"
+            "atendimento interrompido pelo cliente",
+            "questão pessoal ou emergência do cliente"
         }
         self.filteredNodes = []
         self.authorizedBillable = []
@@ -188,6 +189,7 @@ class IMNDDataLoader:
         except Exception as e:
             print(f"❌ Erro geral na execução da tarefa: {e}")
         print(f"Tarefa executada às {datetime.now()}")
+        
     def checkPendingAuthorizationForCurrentMonth(self, nodes):
         today = date.today()
         limitDate = today - timedelta(days=3)  # Data limite: até 3 dias antes de hoje
@@ -199,7 +201,7 @@ class IMNDDataLoader:
                 nodeStatus = node.get("metas", {}).get("ts_status")
 
                 # Verifica se a data está entre até 3 dias antes da data atual
-                if (nodeDateTime < limitDate) and (nodeMotivation in self.motivations) and (nodeStatus is None or nodeStatus == ""):
+                if (nodeDateTime < limitDate) and (nodeMotivation is None or nodeMotivation == "" or nodeMotivation in self.motivations) and (nodeStatus is None or nodeStatus == ""):
                     print(f"Consulta faturável não autorizada encontrada em {node['data']}")
                     self.pendingAuthorizationInArrearsCurrentMonth.append({
                         "data": node["data"],
@@ -208,6 +210,7 @@ class IMNDDataLoader:
             except ValueError as erro:
                 print(f"❌ Erro ao converter data '{node.get('data', 'Desconhecida')}': {erro}")
         return self.pendingAuthorizationInArrearsCurrentMonth
+        
     def processNotBillableQueries(self, nodes):
         today = date.today()
         limitDate = today - timedelta(days=3)  # Data limite: 3 dias antes de hoje
@@ -220,7 +223,7 @@ class IMNDDataLoader:
                 nodeMotivation = (node.get("motivacao") or "").lower().strip()
                 nodeStatus = node.get("metas", {}).get("ts_status")
 
-                if startOfMonth <= nodeDateTime < limitDate and nodeMotivation in self.motivations and (nodeStatus is None or nodeStatus == ""):# Verifica se a data está entre o início do mês e registros de mais de 3 dias atrás
+                if startOfMonth <= nodeDateTime < limitDate and (nodeMotivation is None or nodeMotivation == "" or nodeMotivation in self.motivations) and (nodeStatus is None or nodeStatus == ""):# Verifica se a data está entre o início do mês e registros de mais de 3 dias atrás
                     print(f"Consulta faturável não autorizada encontrada em {node['data']}")
                     self.billableNotAuthorized.append({
                         "data": node["data"],
@@ -243,7 +246,7 @@ class IMNDDataLoader:
                 nodeMotivation = (node.get("motivacao") or "").lower().strip()
                 nodeStatus = (node.get("metas", {}).get("ts_status") or "").lower().strip()
 
-                if (nodeDateTime <= limitDate and nodeMotivation in self.motivations and nodeStatus == status):
+                if (nodeDateTime <= limitDate and (nodeMotivation is None or nodeMotivation == "" or nodeMotivation in self.motivations) and nodeStatus == status):
                     result.append({
                         "data": node["data"],
                         "motivacao": node["motivacao"]
