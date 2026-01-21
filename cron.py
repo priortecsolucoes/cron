@@ -11,7 +11,6 @@ class IMNDDataLoader:
         self.accessToken = os.getenv('IMND_ACCESS_TOKEN')
         if not self.accessToken:
             raise EnvironmentError("A variável de ambiente 'IMND_ACCESS_TOKEN' não foi encontrada")
-        self.headers = {'Authorization': f'{self.accessToken}'}
         self.motivations = {
             "atendimento recorrente",
             "atendimento sos",
@@ -72,7 +71,6 @@ class IMNDDataLoader:
         while attempt <= maxRetries:
             try:
                 print(url)
-                print(self.headers)
                 response = requests.get(url)
                 response.raise_for_status()  # Levanta exceção para erros HTTP
                 return response
