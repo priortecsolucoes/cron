@@ -102,7 +102,7 @@ class IMNDDataLoader:
             allNodes = []
 
             while hasMore:
-                apiUrl = f'http://api.imnd.com.br:3000/api/automation/appointments?authorization={self.accessToken}&page={page}&limit=1000&date_start={dateStart}&date_end={dateEnd}'
+                apiUrl = f'http://api.imnd.com.br:3000/api/automation/appointments?authorization={self.accessToken}&page={page}&limit=10000&date_start={dateStart}&date_end={dateEnd}'
                 print(f"🔄 Requisitando página {page}...")
 
                 requisicao = self.requestWithRetries(apiUrl)
@@ -190,7 +190,6 @@ class IMNDDataLoader:
         
     def checkPendingAuthorizationForCurrentMonth(self, nodes):
         today = date.today()
-        limitDate = today - timedelta(days=3)  # Data limite: até 3 dias antes de hoje
         for node in nodes:
             try:
                 nodeDateTimeStr = node.get("data", "01/01/1970")
@@ -199,7 +198,7 @@ class IMNDDataLoader:
                 nodeStatus = node.get("metas", {}).get("ts_status")
 
                 # Verifica se a data está entre até 3 dias antes da data atual
-                if (nodeDateTime < limitDate) and (nodeMotivation is None or nodeMotivation == "" or nodeMotivation in self.motivations) and (nodeStatus is None or nodeStatus == ""):
+                if (nodeMotivation is None or nodeMotivation == "" or nodeMotivation in self.motivations) and (nodeStatus is None or nodeStatus == ""):
                     print(f"Consulta faturável não autorizada encontrada em {node['data']}")
                     self.pendingAuthorizationInArrearsCurrentMonth.append({
                         "data": node["data"],
