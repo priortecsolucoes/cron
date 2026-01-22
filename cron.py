@@ -197,7 +197,6 @@ class IMNDDataLoader:
                 nodeMotivation = (node.get("motivacao") or "").lower().strip()
                 nodeStatus = node.get("metas", {}).get("ts_status")
 
-                # Verifica se a data está entre até 3 dias antes da data atual
                 if (nodeDateTime <= today) and (nodeMotivation is None or nodeMotivation == "" or nodeMotivation in self.motivations) and (nodeStatus is None or nodeStatus == ""):
                     self.pendingAuthorizationInArrearsCurrentMonth.append({
                         "data": node["data"],
