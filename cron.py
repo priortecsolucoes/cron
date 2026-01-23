@@ -208,7 +208,6 @@ class IMNDDataLoader:
         
     def processNotBillableQueries(self, nodes):
         today = date.today()
-        limitDate = today - timedelta(days=3)  # Data limite: 3 dias antes de hoje
         startOfMonth = today.replace(day=1)    # Início do mês atual
 
         for node in nodes:  # Filtra os dados e cria o filteredNodes com a estrutura desejada
@@ -218,7 +217,7 @@ class IMNDDataLoader:
                 nodeMotivation = (node.get("motivacao") or "").lower().strip()
                 nodeStatus = node.get("metas", {}).get("ts_status")
 
-                if startOfMonth <= nodeDateTime < limitDate and (nodeMotivation is None or nodeMotivation == "" or nodeMotivation in self.motivations) and (nodeStatus is None or nodeStatus == ""):# Verifica se a data está entre o início do mês e registros de mais de 3 dias atrás
+                if startOfMonth <= nodeDateTime < today and (nodeMotivation is None or nodeMotivation == "" or nodeMotivation in self.motivations) and (nodeStatus is None or nodeStatus == ""):# Verifica se a data está entre o início do mês e registros de mais de 3 dias atrás
                     self.billableNotAuthorized.append({
                         "data": node["data"],
                         "motivacao": node["motivacao"],
@@ -231,7 +230,6 @@ class IMNDDataLoader:
 
     def processBillableQueries(self, nodes, status):
         today = date.today()
-        limitDate = today - timedelta(days=3)
         result = []  
         for node in nodes:
             try:
@@ -240,7 +238,7 @@ class IMNDDataLoader:
                 nodeMotivation = (node.get("motivacao") or "").lower().strip()
                 nodeStatus = (node.get("metas", {}).get("ts_status") or "").lower().strip()
 
-                if (nodeDateTime <= limitDate and (nodeMotivation is None or nodeMotivation == "" or nodeMotivation in self.motivations) and nodeStatus == status):
+                if (nodeDateTime <= today and (nodeMotivation is None or nodeMotivation == "" or nodeMotivation in self.motivations) and nodeStatus == status):
                     result.append({
                         "data": node["data"],
                         "motivacao": node["motivacao"]
