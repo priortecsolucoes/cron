@@ -15,10 +15,7 @@ class IMNDDataLoader:
             "atendimento recorrente",
             "atendimento sos",
             "atendimento pontual", 
-            "alta",
-            "emergência do cliente",
-            "atendimento interrompido pelo cliente",
-            "questão pessoal ou emergência do cliente"
+            "alta"
         }
         self.filteredNodes = []
         self.authorizedBillable = []
@@ -217,7 +214,7 @@ class IMNDDataLoader:
                 nodeMotivation = (node.get("motivacao") or "").lower().strip()
                 nodeStatus = node.get("metas", {}).get("ts_status")
 
-                if startOfMonth <= nodeDateTime < today and (nodeMotivation is None or nodeMotivation == "" or nodeMotivation in self.motivations) and (nodeStatus is None or nodeStatus == ""):# Verifica se a data está entre o início do mês e registros de mais de 3 dias atrás
+                if startOfMonth <= nodeDateTime < today and (nodeMotivation in self.motivations) and (nodeStatus is None or nodeStatus == ""):# Verifica se a data está entre o início do mês e registros de mais de 3 dias atrás
                     self.billableNotAuthorized.append({
                         "data": node["data"],
                         "motivacao": node["motivacao"],
@@ -238,7 +235,7 @@ class IMNDDataLoader:
                 nodeMotivation = (node.get("motivacao") or "").lower().strip()
                 nodeStatus = (node.get("metas", {}).get("ts_status") or "").lower().strip()
 
-                if (nodeDateTime <= today and (nodeMotivation is None or nodeMotivation == "" or nodeMotivation in self.motivations) and nodeStatus == status):
+                if (nodeDateTime <= today and (nodeMotivation in self.motivations) and nodeStatus == status):
                     result.append({
                         "data": node["data"],
                         "motivacao": node["motivacao"]
