@@ -11,11 +11,20 @@ class IMNDDataLoader:
         self.accessToken = os.getenv('IMND_ACCESS_TOKEN')
         if not self.accessToken:
             raise EnvironmentError("A variável de ambiente 'IMND_ACCESS_TOKEN' não foi encontrada")
-        self.motivations = {
+        self.billable_motivations = {
             "atendimento recorrente",
             "atendimento sos",
             "atendimento pontual", 
+            "plantao",
             "alta"
+        }
+        self.delayed_pending_motivations = {
+            "atendimento recorrente",
+            "atendimento sos",
+            "atendimento pontual", 
+            "plantao",
+            "alta",
+            "questão pessoal ou emergência do cliente"
         }
         self.filteredNodes = []
         self.authorizedBillable = []
@@ -198,7 +207,7 @@ class IMNDDataLoader:
                 nodeMotivation = (node.get("motivacao") or "").lower().strip()
                 nodeStatus = node.get("metas", {}).get("ts_status")
 
-                if (nodeDateTime <= today) and (nodeMotivation is None or nodeMotivation == "" or nodeMotivation in self.motivations) and (nodeStatus is None or nodeStatus == ""):
+                if (nodeDateTime <= today) and (nodeMotivation is None or nodeMotivation == "" or nodeMotivation in self.delayed_pending_motivations) and (nodeStatus is None or nodeStatus == ""):
                     self.pendingAuthorizationInArrearsCurrentMonth.append({
                         "data": node["data"],
                         "ts_status": node.get("metas", {}).get("ts_status", ""),
@@ -218,7 +227,7 @@ class IMNDDataLoader:
                 nodeMotivation = (node.get("motivacao") or "").lower().strip()
                 nodeStatus = node.get("metas", {}).get("ts_status")
 
-                if startOfMonth <= nodeDateTime < today and (nodeMotivation in self.motivations) and (nodeStatus is None or nodeStatus == ""):# Verifica se a data está entre o início do mês e registros de mais de 3 dias atrás
+                if startOfMonth <= nodeDateTime < today and (nodeMotivation in self.billable_motivations) and (nodeStatus is None or nodeStatus == ""):# Verifica se a data está entre o início do mês e registros de mais de 3 dias atrás
                     self.billableNotAuthorized.append({
                         "data": node["data"],
                         "motivacao": node["motivacao"],
@@ -239,7 +248,7 @@ class IMNDDataLoader:
                 nodeMotivation = (node.get("motivacao") or "").lower().strip()
                 nodeStatus = (node.get("metas", {}).get("ts_status") or "").lower().strip()
 
-                if (nodeDateTime <= today and (nodeMotivation in self.motivations) and nodeStatus == status):
+                if (nodeDateTime <= today and (nodeMotivation in self.billable_motivations) and nodeStatus == status):
                     result.append({
                         "data": node["data"],
                         "motivacao": node["motivacao"]
