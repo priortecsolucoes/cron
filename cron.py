@@ -16,6 +16,7 @@ class IMNDDataLoader:
             "atendimento sos",
             "atendimento pontual", 
             "plantao",
+            "plantão",
             "alta"
         }
         self.delayed_pending_motivations = {
@@ -23,6 +24,7 @@ class IMNDDataLoader:
             "atendimento sos",
             "atendimento pontual", 
             "plantao",
+            "plantão",
             "alta",
             "questão pessoal ou emergência do cliente"
         }
