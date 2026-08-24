@@ -110,7 +110,7 @@ class IMNDDataLoader:
             allNodes = []
 
             while hasMore:
-                apiUrl = f'http://api.imnd.com.br:3000/api/automation/appointments?authorization={self.accessToken}&page={page}&limit=10000&date_start={dateStart}&date_end={dateEnd}&status=scheduled,fulfilled,notaccomplished,rescheduled,inprogress,rescheduled_24,notaccomplished_24'
+                apiUrl = f'http://api.imnd.com.br:3000/api/automation/appointments?authorization={self.accessToken}&page={page}&limit=4000&date_start={dateStart}&date_end={dateEnd}&status=scheduled,fulfilled,notaccomplished,rescheduled,inprogress,rescheduled_24,notaccomplished_24'
                 print(f"🔄 Requisitando página {page}...")
 
                 requisicao = self.requestWithRetries(apiUrl)
